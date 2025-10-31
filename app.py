@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify, session
 from datetime import datetime, timedelta
 import os
 import json
+import pandas as pd
 from dotenv import load_dotenv
 
 from config import MODEL, COPING_STRATEGIES, CRISIS_RESOURCES, EMOJI_MAP
@@ -116,7 +117,14 @@ def api_generate_reflection():
     # Get similar entries
     df = load_entries()
     similar = get_similar_entries(entry_text, df, top_n=3)
-    similar_list = similar.to_dict('records') if not similar.empty else []
+    # Check if 'similar' is a DataFrame (has 'empty' attribute) or a non-empty list
+    if hasattr(similar, 'empty') and not similar.empty:
+        similar_list = similar.to_dict('records')
+    elif isinstance(similar, list) and len(similar) == 0:
+        similar_list = []
+    else:
+        # This path assumes 'similar' is a DataFrame and is NOT empty
+        similar_list = similar.to_dict('records')
     
     # Get severity
     severity = get_emotion_severity(sentiment)
@@ -199,6 +207,8 @@ def api_analytics():
     
     if df.empty:
         return jsonify({'empty': True})
+    
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
     
     # Calculate metrics
     total = len(df)

@@ -68,8 +68,12 @@ CRISIS_RESOURCES = {
     "us_crisis_line": "https://988lifeline.org (call or text 988)",
     "crisis_text": "Text HOME to 741741",
     "international": "https://www.befrienders.org",
-}
 
+    # India-Specific Resources (24x7)
+    "india_tele_manas": "Call 14416 or 1800-891-4416",
+    "india_kiran": "Call 1800-599-0019",
+    "india_vandrevala": "Call/WhatsApp +91 9999 666 555",
+}
 # Emoji mapping for emotions
 EMOJI_MAP = {
     "happy": "😊", "sad": "😢", "angry": "😠", "neutral": "😐", "anxious": "😰", 

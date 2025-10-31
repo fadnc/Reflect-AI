@@ -4,210 +4,211 @@
 
 {% block content %}
 <div class="card-custom fade-in">
-    <h2 class="mb-4">📊 Your Emotional Journey</h2>
-    
-    <div id="loadingSpinner" class="text-center my-5">
-        <div class="spinner-border" role="status"></div>
-        <p class="mt-2">Loading analytics...</p>
-    </div>
-    
-    <div id="analyticsContent" style="display: none;">
-        <!-- Metrics -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="metric-card">
-                    <div class="metric-value" id="metricTotal">0</div>
-                    <div class="metric-label">Total Entries</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="metric-card">
-                    <div class="metric-value" id="metricAvg">0</div>
-                    <div class="metric-label">Avg Sentiment</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="metric-card">
-                    <div class="metric-value" id="metricPositive">0%</div>
-                    <div class="metric-label">Positive Days</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="metric-card">
-                    <div class="metric-value" id="metricSpan">0</div>
-                    <div class="metric-label">Days Tracked</div>
-                </div>
-            </div>
-        </div>
-        
-        <hr class="my-4">
-        
-        <!-- Charts -->
-        <div class="row">
-            <div class="col-lg-8">
-                <h4 class="mb-3">Sentiment Over Time</h4>
-                <canvas id="sentimentChart" style="max-height: 300px;"></canvas>
-            </div>
-            <div class="col-lg-4">
-                <h4 class="mb-3">Emotion Distribution</h4>
-                <canvas id="emotionChart" style="max-height: 300px;"></canvas>
-            </div>
-        </div>
-        
-        <hr class="my-4">
-        
-        <!-- Recent Entries Table -->
-        <h4 class="mb-3">📋 Recent Entries</h4>
-        <div class="table-responsive">
-            <table class="table table-dark table-hover">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Emotion</th>
-                        <th>Sentiment</th>
-                        <th>Summary</th>
-                    </tr>
-                </thead>
-                <tbody id="recentEntriesTable"></tbody>
-            </table>
-        </div>
-    </div>
-    
-    <div id="noDataMessage" class="alert alert-info" style="display: none;">
-        No entries yet — start journaling to see trends!
-    </div>
+    <h2 class="mb-4">📊 Your Emotional Journey</h2>
+    
+    <div id="loadingSpinner" class="text-center my-5">
+        <div class="spinner-border" role="status"></div>
+        <p class="mt-2">Loading analytics...</p>
+    </div>
+    
+    <div id="analyticsContent" style="display: none;">
+                <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="metricTotal">0</div>
+                    <div class="metric-label">Total Entries</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="metricAvg">0</div>
+                    <div class="metric-label">Avg Sentiment</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="metricPositive">0%</div>
+                    <div class="metric-label">Positive Days</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="metricSpan">0</div>
+                    <div class="metric-label">Days Tracked</div>
+                </div>
+            </div>
+        </div>
+        
+        <hr class="my-4">
+        
+                <div class="row">
+            <div class="col-lg-8">
+                <h4 class="mb-3">Sentiment Over Time</h4>
+                <canvas id="sentimentChart" style="max-height: 300px;"></canvas>
+            </div>
+            <div class="col-lg-4">
+                <h4 class="mb-3">Emotion Distribution</h4>
+                <canvas id="emotionChart" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+        
+        <hr class="my-4">
+        
+                <h4 class="mb-3">📋 Recent Entries</h4>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Emotion</th>
+                        <th>Sentiment</th>
+                    </tr>
+                </thead>
+                <tbody id="recentEntriesTable"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div id="noDataMessage" class="alert alert-info" style="display: none;">
+        No entries yet — start journaling to see trends!
+    </div>
 </div>
 
 <script>
 let sentimentChart, emotionChart;
 
 async function loadAnalytics() {
-    try {
-        const response = await fetch('/api/analytics');
-        const data = await response.json();
-        
-        document.getElementById('loadingSpinner').style.display = 'none';
-        
-        if (data.empty) {
-            document.getElementById('noDataMessage').style.display = 'block';
-            return;
-        }
-        
-        document.getElementById('analyticsContent').style.display = 'block';
-        
-        // Update metrics
-        document.getElementById('metricTotal').textContent = data.metrics.total;
-        document.getElementById('metricAvg').textContent = data.metrics.avg_sentiment;
-        document.getElementById('metricPositive').textContent = data.metrics.positive_pct + '%';
-        document.getElementById('metricSpan').textContent = data.metrics.days_span + ' days';
-        
-        // Sentiment over time chart
-        const sentimentDates = data.sentiment_data.map(d => new Date(d.timestamp).toLocaleDateString());
-        const sentimentValues = data.sentiment_data.map(d => d.sentiment);
-        
-        const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
-        sentimentChart = new Chart(sentimentCtx, {
-            type: 'line',
-            data: {
-                labels: sentimentDates,
-                datasets: [{
-                    label: 'Sentiment',
-                    data: sentimentValues,
-                    borderColor: function(context) {
-                        const value = context.parsed.y;
-                        return value >= 0.5 ? '#22C55E' : value > 0 ? '#F59E0B' : '#EF4444';
-                    },
-                    backgroundColor: 'rgba(124, 58, 237, 0.1)',
-                    tension: 0.4,
-                    pointRadius: 5,
-                    pointBackgroundColor: function(context) {
-                        const value = context.parsed.y;
-                        return value >= 0.5 ? '#22C55E' : value > 0 ? '#F59E0B' : '#EF4444';
-                    },
-                    segment: {
-                        borderColor: function(context) {
-                            const value = context.p1.parsed.y;
-                            return value >= 0.5 ? '#22C55E' : value > 0 ? '#F59E0B' : '#EF4444';
-                        }
-                    }
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        min: -1,
-                        max: 1,
-                        ticks: { color: '#E5E7EB' },
-                        grid: { color: 'rgba(229, 231, 235, 0.1)' }
-                    },
-                    x: {
-                        ticks: { color: '#E5E7EB' },
-                        grid: { color: 'rgba(229, 231, 235, 0.1)' }
-                    }
-                }
-            }
-        });
-        
-        // Emotion distribution chart
-        const emotionLabels = Object.keys(data.emotion_counts);
-        const emotionValues = Object.values(data.emotion_counts);
-        
-        const emotionCtx = document.getElementById('emotionChart').getContext('2d');
-        emotionChart = new Chart(emotionCtx, {
-            type: 'bar',
-            data: {
-                labels: emotionLabels,
-                datasets: [{
-                    label: 'Count',
-                    data: emotionValues,
-                    backgroundColor: '#7C3AED',
-                    borderColor: '#8B5CF6',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    x: {
-                        ticks: { color: '#E5E7EB' },
-                        grid: { color: 'rgba(229, 231, 235, 0.1)' }
-                    },
-                    y: {
-                        ticks: { color: '#E5E7EB' },
-                        grid: { display: false }
-                    }
-                }
-            }
-        });
-        
-        // Recent entries table
-        const tableBody = document.getElementById('recentEntriesTable');
-        data.recent_entries.forEach(entry => {
-            const date = new Date(entry.timestamp).toLocaleDateString();
-            tableBody.innerHTML += `
-                <tr>
-                    <td>${date}</td>
-                    <td>${entry.emotion}</td>
-                    <td>${entry.sentiment.toFixed(2)}</td>
-                    <td>${entry.summary || 'N/A'}</td>
-                </tr>
-            `;
-        });
-        
-    } catch (error) {
-        document.getElementById('loadingSpinner').style.display = 'none';
-        alert('Error loading analytics: ' + error.message);
-    }
+    try {
+        const response = await fetch('/api/analytics');
+        const data = await response.json();
+        
+        document.getElementById('loadingSpinner').style.display = 'none';
+        
+        if (data.empty) {
+            document.getElementById('noDataMessage').style.display = 'block';
+            return;
+        }
+        
+        document.getElementById('analyticsContent').style.display = 'block';
+        
+        // Update metrics
+        document.getElementById('metricTotal').textContent = data.metrics.total;
+        document.getElementById('metricAvg').textContent = data.metrics.avg_sentiment;
+        document.getElementById('metricPositive').textContent = data.metrics.positive_pct + '%';
+        document.getElementById('metricSpan').textContent = data.metrics.days_span + ' days';
+        
+        // Sentiment over time chart
+        const sentimentDates = data.sentiment_data.map(d => new Date(d.timestamp).toLocaleDateString());
+        const sentimentValues = data.sentiment_data.map(d => d.sentiment);
+        
+        const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
+        sentimentChart = new Chart(sentimentCtx, {
+            type: 'line',
+            data: {
+                labels: sentimentDates,
+                datasets: [{
+                    label: 'Sentiment',
+                    data: sentimentValues,
+                    borderColor: function(context) {
+                        // FIX 1: Check if context.parsed exists
+                        const value = context.parsed ? context.parsed.y : 0;
+                        return value >= 0.5 ? '#22C55E' : value > 0 ? '#F59E0B' : '#EF4444';
+                    },
+                    backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointBackgroundColor: function(context) {
+                        // FIX 2: Check if context.parsed exists
+                        const value = context.parsed ? context.parsed.y : 0;
+                        return value >= 0.5 ? '#22C55E' : value > 0 ? '#F59E0B' : '#EF4444';
+                    },
+                    segment: {
+                        borderColor: function(context) {
+                            // FIX 3: Check if context.p1 AND parsed data exists
+                            const value = context.p1 && context.p1.parsed ? context.p1.parsed.y : 0;
+                            return value >= 0.5 ? '#22C55E' : value > 0 ? '#F59E0B' : '#EF4444';
+                        }
+                    }
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        min: -1,
+                        max: 1,
+                        ticks: { color: '#E5E7EB' },
+                        grid: { color: 'rgba(229, 231, 235, 0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#E5E7EB' },
+                        grid: { color: 'rgba(229, 231, 235, 0.1)' }
+                    }
+                }
+            }
+        });
+        
+        // Emotion distribution chart
+        const emotionLabels = Object.keys(data.emotion_counts);
+        const emotionValues = Object.values(data.emotion_counts);
+        
+        const emotionCtx = document.getElementById('emotionChart').getContext('2d');
+        emotionChart = new Chart(emotionCtx, {
+            type: 'bar',
+            data: {
+                labels: emotionLabels,
+                datasets: [{
+                    label: 'Count',
+                    data: emotionValues,
+                    backgroundColor: '#7C3AED',
+                    borderColor: '#8B5CF6',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#E5E7EB' },
+                        grid: { color: 'rgba(229, 231, 235, 0.1)' }
+                    },
+                    y: {
+                        ticks: { color: '#E5E7EB' },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+        
+        // Recent entries table
+        const tableBody = document.getElementById('recentEntriesTable');
+        data.recent_entries.forEach(entry => {
+            const date = new Date(entry.timestamp).toLocaleDateString();
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${date}</td>
+                    <td>${entry.emotion}</td>
+                    <td>${entry.sentiment.toFixed(2)}</td>
+                    <td>${entry.summary || 'N/A'}</td>
+                </tr>
+            `;
+        });
+        
+    } catch (error) {
+        document.getElementById('loadingSpinner').style.display = 'none';
+        // Log error to console for better debugging, keep alert simple
+        console.error('Error in loadAnalytics:', error);
+        alert('Error loading analytics: ' + error.message);
+    }
 }
 
 window.addEventListener('load', loadAnalytics);
