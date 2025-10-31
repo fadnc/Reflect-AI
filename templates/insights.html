@@ -1,1 +1,182 @@
+{% extends "base.html" %}
 
+{% block title %}Insights | ReflectAI{% endblock %}
+
+{% block content %}
+<div class="card-custom fade-in">
+    <h2 class="mb-4">💡 Emotional Insights & Patterns</h2>
+    
+    <div id="loadingSpinner" class="text-center my-5">
+        <div class="spinner-border" role="status"></div>
+        <p class="mt-2">Analyzing patterns...</p>
+    </div>
+    
+    <div id="insightsContent" style="display: none;">
+        <!-- Emotion Frequency -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <h4 class="mb-3">🎯 Emotion Frequency</h4>
+                <canvas id="emotionFreqChart" style="max-height: 300px;"></canvas>
+            </div>
+            <div class="col-lg-4">
+                <h4 class="mb-3">Top Emotions</h4>
+                <div id="topEmotionsList"></div>
+            </div>
+        </div>
+        
+        <hr class="my-4">
+        
+        <!-- Sentiment Statistics -->
+        <h4 class="mb-3">📈 Sentiment Statistics</h4>
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="statAvg">0</div>
+                    <div class="metric-label">Average</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="statHighest">0</div>
+                    <div class="metric-label">Highest</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="statLowest">0</div>
+                    <div class="metric-label">Lowest</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="statVolatility">0</div>
+                    <div class="metric-label">Volatility</div>
+                </div>
+            </div>
+        </div>
+        
+        <hr class="my-4">
+        
+        <!-- Emotion Transitions -->
+        <h4 class="mb-3">🔄 Common Emotion Transitions</h4>
+        <div id="transitionsList" class="mb-4"></div>
+        
+        <hr class="my-4">
+        
+        <!-- Low Mood Context -->
+        <h4 class="mb-3">🔍 What Comes Before Low Mood Days?</h4>
+        <p class="text-muted">Common themes in difficult days:</p>
+        <div id="lowContextList"></div>
+    </div>
+    
+    <div id="noDataMessage" class="alert alert-info" style="display: none;">
+        Journal more entries to unlock pattern insights!
+    </div>
+</div>
+
+<script>
+const emojiMap = {{ emoji_map | tojson }};
+let emotionChart;
+
+async function loadInsights() {
+    try {
+        const response = await fetch('/api/insights');
+        const data = await response.json();
+        
+        document.getElementById('loadingSpinner').style.display = 'none';
+        
+        if (data.empty) {
+            document.getElementById('noDataMessage').style.display = 'block';
+            return;
+        }
+        
+        document.getElementById('insightsContent').style.display = 'block';
+        
+        // Emotion frequency chart
+        const emotions = Object.keys(data.patterns.emotion_frequency);
+        const frequencies = Object.values(data.patterns.emotion_frequency);
+        
+        const ctx = document.getElementById('emotionFreqChart').getContext('2d');
+        emotionChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: emotions,
+                datasets: [{
+                    label: 'Frequency',
+                    data: frequencies,
+                    backgroundColor: emotions.map((_, i) => i % 2 === 0 ? '#7C3AED' : '#8B5CF6'),
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        ticks: { color: '#E5E7EB' },
+                        grid: { color: 'rgba(229, 231, 235, 0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#E5E7EB' },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+        
+        // Top emotions list
+        const topEmotionsList = document.getElementById('topEmotionsList');
+        emotions.forEach((emotion, idx) => {
+            const emoji = emojiMap[emotion.toLowerCase()] || '';
+            topEmotionsList.innerHTML += `
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2" style="background-color: var(--bg-container); border-radius: 0.5rem;">
+                    <span>${emoji} ${emotion}</span>
+                    <span class="badge" style="background-color: var(--primary);">${frequencies[idx]}</span>
+                </div>
+            `;
+        });
+        
+        // Sentiment statistics
+        const stats = data.patterns.sentiment_stats;
+        document.getElementById('statAvg').textContent = stats.average.toFixed(2);
+        document.getElementById('statHighest').textContent = stats.highest.toFixed(2);
+        document.getElementById('statLowest').textContent = stats.lowest.toFixed(2);
+        document.getElementById('statVolatility').textContent = stats.std_dev.toFixed(2);
+        
+        // Emotion transitions
+        const transitionsList = document.getElementById('transitionsList');
+        if (Object.keys(data.transitions).length > 0) {
+            Object.entries(data.transitions).forEach(([transition, count]) => {
+                transitionsList.innerHTML += `
+                    <div class="card-custom mb-2">
+                        <strong>${transition}</strong> — <em>happened ${count} times</em>
+                    </div>
+                `;
+            });
+        } else {
+            transitionsList.innerHTML = '<p class="text-muted">Not enough entries to detect patterns yet.</p>';
+        }
+        
+        // Low mood context
+        const lowContextList = document.getElementById('lowContextList');
+        if (Object.keys(data.low_context).length > 0) {
+            const topWords = Object.entries(data.low_context).slice(0, 10);
+            topWords.forEach(([word, freq]) => {
+                lowContextList.innerHTML += `<span class="badge me-2 mb-2" style="background-color: var(--danger); font-size: 1rem;">• ${word} (${freq}x)</span>`;
+            });
+        } else {
+            lowContextList.innerHTML = '<p class="text-muted">No low-sentiment entries yet.</p>';
+        }
+        
+    } catch (error) {
+        document.getElementById('loadingSpinner').style.display = 'none';
+        alert('Error loading insights: ' + error.message);
+    }
+}
+
+window.addEventListener('load', loadInsights);
+</script>
+{% endblock %}
