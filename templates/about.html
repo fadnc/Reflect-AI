@@ -1,1 +1,137 @@
+{% extends "base.html" %}
 
+{% block title %}About | ReflectAI{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card-custom fade-in">
+            <h2 class="mb-4">ℹ️ About ReflectAI</h2>
+            
+            <p class="lead">
+                ReflectAI is an AI-powered journaling companion designed to help you understand your emotional patterns and practice self-reflection.
+            </p>
+            
+            <hr class="my-4">
+            
+            <h4 class="mt-4 mb-3">🌟 Key Features</h4>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="p-3" style="background-color: var(--bg-container); border-radius: 0.5rem;">
+                        <strong>🧠 Empathetic Reflections</strong><br>
+                        <small class="text-muted">AI-generated personalized reflections based on your emotional state</small>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="p-3" style="background-color: var(--bg-container); border-radius: 0.5rem;">
+                        <strong>💬 Context-Aware Questions</strong><br>
+                        <small class="text-muted">Follow-up questions tailored to your specific situation</small>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="p-3" style="background-color: var(--bg-container); border-radius: 0.5rem;">
+                        <strong>📊 Detailed Analytics</strong><br>
+                        <small class="text-muted">Emotional analytics and pattern recognition over time</small>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="p-3" style="background-color: var(--bg-container); border-radius: 0.5rem;">
+                        <strong>🔍 Full-Text Search</strong><br>
+                        <small class="text-muted">Search and filter across all your journal entries</small>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="p-3" style="background-color: var(--bg-container); border-radius: 0.5rem;">
+                        <strong>🌿 Coping Suggestions</strong><br>
+                        <small class="text-muted">Grounding techniques and coping strategies when needed</small>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="p-3" style="background-color: var(--bg-container); border-radius: 0.5rem;">
+                        <strong>🚨 Crisis Detection</strong><br>
+                        <small class="text-muted">Automatic detection with professional support resources</small>
+                    </div>
+                </div>
+            </div>
+            
+            <hr class="my-4">
+            
+            <h4 class="mb-3">🤖 How It Works</h4>
+            <ol class="lead" style="line-height: 2;">
+                <li>Write your thoughts freely in the journal</li>
+                <li>ReflectAI analyzes your emotion and sentiment</li>
+                <li>You receive an empathetic reflection with actionable insights</li>
+                <li>Your entry is saved and analyzed for patterns over time</li>
+            </ol>
+            
+            <hr class="my-4">
+            
+            <div class="alert alert-warning">
+                <h5>⚠️ Important Notice</h5>
+                <p class="mb-0">
+                    <strong>This is NOT a substitute for professional therapy.</strong><br>
+                    If you're in crisis, please contact a mental health professional immediately.<br>
+                    Your data is stored locally and encrypted on the server.
+                </p>
+            </div>
+            
+            <hr class="my-4">
+            
+            <h4 class="mb-3">🛠️ Technologies Used</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <ul>
+                        <li><strong>Flask</strong> - Web framework</li>
+                        <li><strong>Google Gemini API</strong> - AI responses</li>
+                        <li><strong>Transformers</strong> - Emotion detection</li>
+                        <li><strong>TextBlob</strong> - Sentiment analysis</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul>
+                        <li><strong>SQLite</strong> - Local data storage</li>
+                        <li><strong>Chart.js</strong> - Data visualization</li>
+                        <li><strong>Bootstrap 5</strong> - UI framework</li>
+                        <li><strong>Scikit-learn</strong> - Pattern analysis</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <hr class="my-4">
+            
+            <h4 class="mb-3">💡 Tips for Better Insights</h4>
+            <ul class="lead" style="line-height: 1.8;">
+                <li>Journal regularly (3-5 times per week is ideal)</li>
+                <li>Be honest and specific about your feelings</li>
+                <li>Track patterns by searching past entries</li>
+                <li>Review your analytics weekly to spot trends</li>
+                <li>Use the insights to inform your self-care</li>
+            </ul>
+            
+            <hr class="my-4">
+            
+            <div class="text-center">
+                <h5>👨‍💻 Created By</h5>
+                <p class="lead">Fadhil Muhammed N C</p>
+                <p class="text-muted">MSc Computer Science (Data Analytics)<br>Capstone Project 2025</p>
+                
+                <div class="mt-4">
+                    <a href="/journal" class="btn btn-primary btn-lg">
+                        ✍️ Start Journaling
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-custom text-center">
+            <h5>🆘 Crisis Resources</h5>
+            <p>If you're in crisis, reach out immediately:</p>
+            <ul class="list-unstyled">
+                <li><strong>Global:</strong> <a href="https://findahelpline.com" target="_blank">findahelpline.com</a></li>
+                <li><strong>US (24/7):</strong> Call or text <strong>988</strong></li>
+                <li><strong>International:</strong> <a href="https://www.befrienders.org" target="_blank">befrienders.org</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
