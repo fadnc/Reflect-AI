@@ -1,8 +1,8 @@
-# 🧠 ReflectAI — Flask Version
+#  ReflectAI — Flask Version
 
 AI-Powered Reflective Journaling Companion built with Flask
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### 1. Install Dependencies
 
@@ -32,7 +32,7 @@ python app.py
 
 Visit: http://localhost:5000
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 empathy-bot-flask/
@@ -54,7 +54,7 @@ empathy-bot-flask/
     └── about.html         # About page
 ```
 
-## 🎯 Features
+##  Features
 
 - **Journal Entries** - Write and reflect with AI-powered insights
 - **Emotion Analysis** - 15+ emotions detected automatically
@@ -70,7 +70,7 @@ empathy-bot-flask/
 - `GET /api/analytics` - Get analytics data
 - `GET /api/insights` - Get emotional insights and patterns
 
-## 🌐 Deployment
+##  Deployment
 
 ### Using Gunicorn
 
@@ -98,17 +98,17 @@ docker build -t reflectai .
 docker run -p 5000:5000 --env-file .env reflectai
 ```
 
-## ⚠️ Important Notes
+##  Important Notes
 
 - This is NOT a replacement for professional therapy
 - If you're in crisis, contact mental health professionals immediately
 - Your data is stored locally in SQLite database
 - API keys are never logged or exposed
 
-## 📝 License
+##  License
 
 MIT License - See LICENSE file
 
-## 👨‍💻 Author
+##  Author
 
 Fadhil Muhammed N C - MSc Computer Science (Data Analytics)
