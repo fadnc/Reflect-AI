@@ -1,1 +1,145 @@
+{% extends "base.html" %}
 
+{% block title %}Search & Filter | ReflectAI{% endblock %}
+
+{% block content %}
+<div class="card-custom fade-in">
+    <h2 class="mb-4">🔍 Search & Filter Your Journal</h2>
+    
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <label class="form-label">🔎 Search Keywords</label>
+            <input type="text" id="searchQuery" class="form-control" placeholder="keyword, phrase...">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Filter by Emotions</label>
+            <select id="emotionFilter" class="form-select" multiple>
+                {% for emotion in emotions %}
+                <option value="{{ emotion }}">{{ emotion }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Sentiment Range</label>
+            <div class="d-flex gap-2">
+                <input type="number" id="sentMin" class="form-control" value="-1" min="-1" max="1" step="0.1">
+                <input type="number" id="sentMax" class="form-control" value="1" min="-1" max="1" step="0.1">
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Sort By</label>
+            <div class="btn-group w-100" role="group">
+                <input type="radio" class="btn-check" name="sortBy" id="sortNewest" value="newest" checked>
+                <label class="btn btn-outline-secondary" for="sortNewest">Newest First</label>
+                
+                <input type="radio" class="btn-check" name="sortBy" id="sortOldest" value="oldest">
+                <label class="btn btn-outline-secondary" for="sortOldest">Oldest First</label>
+                
+                <input type="radio" class="btn-check" name="sortBy" id="sortPositive" value="positive">
+                <label class="btn btn-outline-secondary" for="sortPositive">Most Positive</label>
+                
+                <input type="radio" class="btn-check" name="sortBy" id="sortNegative" value="negative">
+                <label class="btn btn-outline-secondary" for="sortNegative">Most Negative</label>
+            </div>
+        </div>
+        <div class="col-md-6 d-flex align-items-end">
+            <button id="searchBtn" class="btn btn-primary w-100">Search</button>
+        </div>
+    </div>
+</div>
+
+<div class="card-custom">
+    <h4 id="resultsTitle">📋 Results (<span id="resultCount">0</span> entries)</h4>
+    
+    <div id="loadingSpinner" class="text-center my-5" style="display: none;">
+        <div class="spinner-border" role="status"></div>
+    </div>
+    
+    <div id="resultsContainer"></div>
+    
+    <div id="noResults" class="alert alert-warning" style="display: none;">
+        No entries match your filters.
+    </div>
+</div>
+
+<script>
+const emojiMap = {{ emoji_map | tojson }};
+
+async function performSearch() {
+    const query = document.getElementById('searchQuery').value;
+    const emotions = Array.from(document.getElementById('emotionFilter').selectedOptions).map(opt => opt.value);
+    const sentMin = parseFloat(document.getElementById('sentMin').value);
+    const sentMax = parseFloat(document.getElementById('sentMax').value);
+    const sortBy = document.querySelector('input[name="sortBy"]:checked').value;
+    
+    document.getElementById('loadingSpinner').style.display = 'block';
+    document.getElementById('resultsContainer').innerHTML = '';
+    document.getElementById('noResults').style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                query: query,
+                emotions: emotions,
+                sentiment_range: [sentMin, sentMax],
+                sort_by: sortBy
+            })
+        });
+        
+        const data = await response.json();
+        
+        document.getElementById('loadingSpinner').style.display = 'none';
+        document.getElementById('resultCount').textContent = data.count;
+        
+        if (data.count === 0) {
+            document.getElementById('noResults').style.display = 'block';
+            return;
+        }
+        
+        const container = document.getElementById('resultsContainer');
+        data.entries.forEach(entry => {
+            const emoji = emojiMap[entry.emotion.toLowerCase()] || '';
+            const timestamp = new Date(entry.timestamp).toLocaleString();
+            
+            container.innerHTML += `
+                <div class="card-custom mt-3 fade-in">
+                    <strong>📅 ${timestamp}</strong> ${emoji}<br>
+                    <strong>Emotion:</strong> ${entry.emotion} | <strong>Sentiment:</strong> ${entry.sentiment.toFixed(2)}<br><br>
+                    <strong>Entry:</strong><br>
+                    ${entry.entry}<br><br>
+                    <strong>Reflection:</strong><br>
+                    <em class="reflection-output">${entry.reflection}</em>
+                </div>
+            `;
+        });
+        
+    } catch (error) {
+        document.getElementById('loadingSpinner').style.display = 'none';
+        alert('Error searching: ' + error.message);
+    }
+}
+
+document.getElementById('searchBtn').addEventListener('click', performSearch);
+
+// Search on Enter key
+document.getElementById('searchQuery').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') performSearch();
+});
+
+// Load all entries on page load
+window.addEventListener('load', performSearch);
+</script>
+
+<style>
+.btn-check:checked + .btn-outline-secondary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+</style>
+{% endblock %}
