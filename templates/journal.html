@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Journal Entry | ReflectAI{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card-custom fade-in">
+            <h2 class="mb-4">✍️ Write Your Journal Entry</h2>
+            
+            <div class="mb-3">
+                <textarea 
+                    id="journalEntry" 
+                    class="form-control" 
+                    rows="8" 
+                    placeholder="What's on your mind today? Write freely — ReflectAI listens without judgment..."
+                ></textarea>
+            </div>
+            
+            <button id="generateBtn" class="btn btn-primary w-100">
+                ✨ Generate Reflection
+            </button>
+            
+            <div id="loadingSpinner" class="text-center mt-3" style="display: none;">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">🧠 Generating personalized reflection...</p>
+            </div>
+        </div>
+        
+        <!-- Crisis Warning -->
+        <div id="crisisWarning" class="crisis-warning" style="display: none;">
+            <h3>🚨 Crisis Support Available</h3>
+            <p>Your safety is important. Please reach out for professional support:</p>
+            <ul id="crisisResources"></ul>
+        </div>
+        
+        <!-- Reflection Output -->
+        <div id="reflectionContainer" style="display: none;">
+            <div class="card-custom fade-in">
+                <h3 id="reflectionTitle" class="mb-3"></h3>
+                
+                <div class="reflection-output" id="reflectionText"></div>
+                
+                <!-- Metrics -->
+                <div class="row mt-4 mb-3">
+                    <div class="col-md-4">
+                        <div class="metric-card">
+                            <div class="metric-value" id="emotionMetric"></div>
+                            <div class="metric-label">Emotion</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="metric-card">
+                            <div class="metric-value" id="sentimentMetric"></div>
+                            <div class="metric-label">Sentiment</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="metric-card">
+                            <div class="metric-value" id="severityMetric"></div>
+                            <div class="metric-label">Severity</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Summary -->
+                <div class="alert alert-info" id="summaryBox"></div>
+                
+                <!-- Actionable Insight -->
+                <div id="actionableBox" class="actionable" style="display: none;">
+                    <strong>💡 Try This:</strong> <span id="actionableText"></span>
+                </div>
+                
+                <!-- Coping Suggestion -->
+                <div id="copingBox" class="coping-box" style="display: none;">
+                    <strong>🌿 Grounding Technique:</strong> <span id="copingText"></span>
+                </div>
+                
+                <!-- Follow-up Questions -->
+                <div id="followupsContainer" class="mt-4"></div>
+                
+                <div class="alert alert-success mt-3">
+                    ✅ Entry saved successfully!
+                </div>
+            </div>
+            
+            <!-- Similar Entries -->
+            <div class="card-custom">
+                <h4>🧭 Similar Past Reflections</h4>
+                <div id="similarEntries"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('generateBtn').addEventListener('click', async function() {
+    const entry = document.getElementById('journalEntry').value.trim();
+    
+    if (!entry) {
+        alert('Please write something first.');
+        return;
+    }
+    
+    // Show loading
+    document.getElementById('loadingSpinner').style.display = 'block';
+    document.getElementById('generateBtn').disabled = true;
+    document.getElementById('crisisWarning').style.display = 'none';
+    document.getElementById('reflectionContainer').style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/generate-reflection', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ entry: entry })
+        });
+        
+        const data = await response.json();
+        
+        // Hide loading
+        document.getElementById('loadingSpinner').style.display = 'none';
+        document.getElementById('generateBtn').disabled = false;
+        
+        if (data.crisis) {
+            // Show crisis resources
+            document.getElementById('crisisWarning').style.display = 'block';
+            const resourcesList = document.getElementById('crisisResources');
+            resourcesList.innerHTML = `
+                <li><strong>Global:</strong> <a href="${data.resources.global}" target="_blank">findahelpline.com</a></li>
+                <li><strong>US Crisis Line:</strong> ${data.resources.us_crisis_line}</li>
+                <li><strong>International:</strong> <a href="${data.resources.international}" target="_blank">befrienders.org</a></li>
+            `;
+            document.getElementById('journalEntry').value = '';
+            return;
+        }
+        
+        // Display reflection
+        document.getElementById('reflectionContainer').style.display = 'block';
+        document.getElementById('reflectionTitle').textContent = `💬 ${data.emoji} Reflection`;
+        document.getElementById('reflectionText').textContent = `"${data.reflection}"`;
+        
+        // Metrics
+        document.getElementById('emotionMetric').textContent = data.emotion;
+        document.getElementById('sentimentMetric').textContent = data.sentiment.toFixed(2);
+        document.getElementById('severityMetric').textContent = data.severity;
+        
+        // Summary
+        document.getElementById('summaryBox').innerHTML = `<strong>Summary:</strong> ${data.summary}`;
+        
+        // Actionable insight
+        if (data.actionable_insight) {
+            document.getElementById('actionableBox').style.display = 'block';
+            document.getElementById('actionableText').textContent = data.actionable_insight;
+        } else {
+            document.getElementById('actionableBox').style.display = 'none';
+        }
+        
+        // Coping suggestion
+        if (data.coping_suggestion && data.sentiment < -0.3) {
+            document.getElementById('copingBox').style.display = 'block';
+            document.getElementById('copingText').textContent = data.coping_suggestion;
+        } else {
+            document.getElementById('copingBox').style.display = 'none';
+        }
+        
+        // Follow-up questions
+        const followupsContainer = document.getElementById('followupsContainer');
+        followupsContainer.innerHTML = '<h5 class="mb-3">🪞 Reflection Questions</h5>';
+        
+        if (data.followups && data.followups.length > 0) {
+            data.followups.forEach((fup, idx) => {
+                followupsContainer.innerHTML += `
+                    <div class="accordion-item" style="background-color: var(--bg-container); border: 1px solid var(--border); margin-bottom: 0.5rem;">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#followup${idx}" style="background-color: var(--bg-container); color: var(--text-primary);">
+                                Q${idx + 1}: ${fup.question}
+                            </button>
+                        </h2>
+                        <div id="followup${idx}" class="accordion-collapse collapse">
+                            <div class="accordion-body" style="color: var(--text-secondary);">
+                                ${fup.follow_up || ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        // Similar entries
+        const similarContainer = document.getElementById('similarEntries');
+        if (data.similar_entries && data.similar_entries.length > 0) {
+            similarContainer.innerHTML = '';
+            data.similar_entries.forEach(entry => {
+                similarContainer.innerHTML += `
+                    <div class="card-custom mt-2">
+                        <strong>📅 ${entry.timestamp}</strong> — <em>(${entry.emotion}, sentiment: ${entry.sentiment.toFixed(2)})</em><br>
+                        <small>${entry.entry.substring(0, 150)}...</small>
+                    </div>
+                `;
+            });
+        } else {
+            similarContainer.innerHTML = '<p class="text-muted">No similar entries yet.</p>';
+        }
+        
+        // Clear entry
+        document.getElementById('journalEntry').value = '';
+        
+        // Scroll to results
+        document.getElementById('reflectionContainer').scrollIntoView({ behavior: 'smooth' });
+        
+    } catch (error) {
+        document.getElementById('loadingSpinner').style.display = 'none';
+        document.getElementById('generateBtn').disabled = false;
+        alert('Error generating reflection: ' + error.message);
+    }
+});
+</script>
+{% endblock %}
