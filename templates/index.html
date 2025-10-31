@@ -1,1 +1,102 @@
+{% extends "base.html" %}
 
+{% block title %}Dashboard | ReflectAI{% endblock %}
+
+{% block content %}
+<div class="text-center mb-5 fade-in">
+    <h1 class="display-4" style="color: var(--primary);">🧠 ReflectAI</h1>
+    <p class="lead" style="color: var(--text-secondary);">Your AI-Powered Reflective Journaling Companion</p>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="metric-card fade-in">
+            <div class="metric-value">{{ dashboard.total_entries }}</div>
+            <div class="metric-label">📝 Total Entries</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card fade-in">
+            <div class="metric-value">{{ dashboard.avg_sentiment }}</div>
+            <div class="metric-label">🙂 Avg Sentiment</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card fade-in">
+            <div class="metric-value">{{ dashboard.most_common_emotion }}</div>
+            <div class="metric-label">💖 Top Emotion</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card fade-in">
+            <div class="metric-value">{{ dashboard.positive_count }}</div>
+            <div class="metric-label">📈 Positive Days</div>
+        </div>
+    </div>
+</div>
+
+{% if dashboard.last_entry %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card-custom fade-in">
+            <h4>Last Reflection 
+                {% set emoji = emoji_map.get(dashboard.last_entry.emotion.lower(), '') %}
+                {{ emoji }}
+            </h4>
+            <p class="text-muted mb-3">{{ dashboard.last_entry.timestamp }}</p>
+            <p>{{ dashboard.last_entry.entry[:200] }}{% if dashboard.last_entry.entry|length > 200 %}...{% endif %}</p>
+            <hr>
+            <p class="reflection-output">"{{ dashboard.last_entry.reflection }}"</p>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="/journal" class="btn btn-primary btn-lg">
+                ✍️ Write New Entry
+            </a>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card-custom text-center fade-in">
+            <h3>Welcome to ReflectAI! 👋</h3>
+            <p class="lead mt-3">Start your emotional wellness journey by writing your first journal entry.</p>
+            <a href="/journal" class="btn btn-primary btn-lg mt-3">
+                ✍️ Start Journaling
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if emotions %}
+<div class="row mt-4">
+    <div class="col-lg-8 mx-auto">
+        <div class="card-custom">
+            <h5>🔎 Quick Filter by Emotion</h5>
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                {% for emotion in emotions %}
+                    {% set emoji = emoji_map.get(emotion.lower(), '') %}
+                    <a href="/search?emotion={{ emotion }}" class="btn btn-outline-secondary">
+                        {{ emoji }} {{ emotion }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.btn-outline-secondary {
+    color: var(--text-primary);
+    border-color: var(--border);
+}
+.btn-outline-secondary:hover {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+</style>
+{% endblock %}
